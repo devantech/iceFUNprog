@@ -41,7 +41,7 @@ unsigned char FPGAbuf[FLASHSIZE];
 unsigned char SerBuf[300];
 unsigned char ProgName[30];
 int fd;
-
+char verify;
 
 static void help(const char *progname)
 {
@@ -53,6 +53,7 @@ static void help(const char *progname)
 	fprintf(stderr, "  -P <Serial Port>      use the specified USB device [default: /dev/ttyACM0]\n");
 	fprintf(stderr, "  -h                    display this help and exit\n");
 	fprintf(stderr, "  --help\n");
+	fprintf(stderr, "  -v                    skip verification\n");
 	fprintf(stderr, "Example:\n");
 	fprintf(stderr, "%s -P /dev/ttyACM1 blinky.bin\n", progname);
 	fprintf(stderr, "\n");
@@ -105,6 +106,7 @@ char portName[300];
 int length;
 struct termios config;
 
+	verify = 1;										// verify unless told not to
  	DIR * d = opendir(portPath); 						// open the path
 	struct dirent *dir; 							// for the directory entries
 	if(d==NULL) strcpy(portName, "/dev/ttyACM0");		// default serial port to use
@@ -138,7 +140,7 @@ struct termios config;
 	
 	int opt;
 	char *endptr;
-	while ((opt = getopt_long(argc, argv, "P:h", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "P:vh", long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'P': /* Serial port */
 			strcpy(portName, optarg);
@@ -148,6 +150,9 @@ struct termios config;
 			help(argv[0]);
 			close(fd);
 			return EXIT_SUCCESS;
+		case 'v': 
+			verify = 0;
+			break;		
 		default:
 			/* error message has already been printed */
 			fprintf(stderr, "Try `%s -h' for more information.\n", argv[0]);
@@ -213,27 +218,29 @@ struct termios config;
 		}
 	}
 	
-	addr = 0;
-	fprintf(stderr,"\nVerifying ");
-	cnt = 0;
-	while (addr < length)
-	{
-		SerBuf[0] = VERIFY_PAGE;
-		SerBuf[1] = (addr >> 16);
-		SerBuf[2] = (addr >> 8);
-		SerBuf[3] = addr;
-		for (int x = 0; x < 256; x++) SerBuf[x + 4] = FPGAbuf[addr++];
-		write(fd, SerBuf, 260);
-		read(fd, SerBuf, 4);
-		if (SerBuf[0] > 0)
+	if(verify) {
+		addr = 0;
+		fprintf(stderr,"\nVerifying ");
+		cnt = 0;
+		while (addr < length)
 		{
-			fprintf(stderr,"\nVerify failed at %06X, %02X expected, %02X read.\n", addr - 256 + SerBuf[1] - 4, SerBuf[2], SerBuf[3]);
-			return EXIT_FAILURE;
-		}
-		if (++cnt == 10)
-		{
-			cnt = 0;
-			fprintf(stderr,".");
+			SerBuf[0] = VERIFY_PAGE;
+			SerBuf[1] = (addr >> 16);
+			SerBuf[2] = (addr >> 8);
+			SerBuf[3] = addr;
+			for (int x = 0; x < 256; x++) SerBuf[x + 4] = FPGAbuf[addr++];
+			write(fd, SerBuf, 260);
+			read(fd, SerBuf, 4);
+			if (SerBuf[0] > 0)
+			{
+				fprintf(stderr,"\nVerify failed at %06X, %02X expected, %02X read.\n", addr - 256 + SerBuf[1] - 4, SerBuf[2], SerBuf[3]);
+				return EXIT_FAILURE;
+			}
+			if (++cnt == 10)
+			{
+				cnt = 0;
+				fprintf(stderr,".");
+			}
 		}
 	}
 	fprintf(stderr,"\n");
