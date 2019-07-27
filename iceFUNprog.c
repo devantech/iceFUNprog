@@ -125,7 +125,7 @@ struct termios config;
 
 	fd = open(portName, O_RDWR | O_NOCTTY);
 	if(fd == -1) {
-		fprintf(stderr, "%s: failed to open serial port.", argv[0]);
+		fprintf(stderr, "%s: failed to open serial port.\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 	tcgetattr(fd, &config);
