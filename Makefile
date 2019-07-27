@@ -8,6 +8,7 @@ $(OUTPUT): *.c
 	$(CC) $(CFLAGS) -o $(OUTPUT) *.c
 
 install: $(OUTPUT)
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp $(OUTPUT) $(DESTDIR)$(PREFIX)/bin/
 
 uninstall: $(OUTPUT)
