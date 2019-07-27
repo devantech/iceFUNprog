@@ -37,9 +37,9 @@ enum cmds
 };
 
 #define FLASHSIZE 1048576	// 1MByte because that is the size of the Flash chip
-unsigned char FPGAbuf[FLASHSIZE];
-unsigned char SerBuf[300];
-unsigned char ProgName[30];
+char FPGAbuf[FLASHSIZE];
+char SerBuf[300];
+char ProgName[30];
 int fd;
 char verify;
 
@@ -139,7 +139,6 @@ struct termios config;
 	};
 
 	int opt;
-	char *endptr;
 	while ((opt = getopt_long(argc, argv, "P:vh", long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'P': /* Serial port */
