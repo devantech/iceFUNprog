@@ -1,13 +1,12 @@
 # iceFUNprog
 Programmer for Devantech iCE40 modules, iceFUN and iceWerx
 
-To build the programmer: 
+To build and install the programmer:
 
-gcc  -o iceFUNprog iceFUNprog.c
+    $ make install
 
-Then copy iceFUNprog to a bin folder in your $PATH.
 
-To program the module; 
+To program the module:
 
-iceFUNprog blinky.bin
+    $ iceFUNprog blinky.bin
 
