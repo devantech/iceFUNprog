@@ -37,9 +37,9 @@ enum cmds
 };
 
 #define FLASHSIZE 1048576	// 1MByte because that is the size of the Flash chip
-char FPGAbuf[FLASHSIZE];
-char SerBuf[300];
-char ProgName[30];
+unsigned char FPGAbuf[FLASHSIZE];
+unsigned char SerBuf[300];
+unsigned char ProgName[30];
 int fd;
 char verify;
 
