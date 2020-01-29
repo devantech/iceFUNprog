@@ -42,6 +42,7 @@ unsigned char SerBuf[300];
 unsigned char ProgName[30];
 int fd;
 char verify;
+int rw_offset = 0;
 
 static void help(const char *progname)
 {
@@ -52,6 +53,9 @@ static void help(const char *progname)
 	fprintf(stderr, "Options:\n");
 	fprintf(stderr, "  -P <Serial Port>      use the specified USB device [default: /dev/ttyACM0]\n");
 	fprintf(stderr, "  -h                    display this help and exit\n");
+	fprintf(stderr, "  -o <offset in bytes>  start address for write [default: 0]\n");
+	fprintf(stderr, "                        (append 'k' to the argument for size in kilobytes,\n");
+	fprintf(stderr, "                        or 'M' for size in megabytes)\n");
 	fprintf(stderr, "  --help\n");
 	fprintf(stderr, "  -v                    skip verification\n");
 	fprintf(stderr, "Example:\n");
@@ -139,7 +143,8 @@ struct termios config;
 	};
 
 	int opt;
-	while ((opt = getopt_long(argc, argv, "P:vh", long_options, NULL)) != -1) {
+  char *endptr;
+	while ((opt = getopt_long(argc, argv, "P:o:vh", long_options, NULL)) != -1) {
 		switch (opt) {
 		case 'P': /* Serial port */
 			strcpy(portName, optarg);
@@ -152,6 +157,19 @@ struct termios config;
 		case 'v':
 			verify = 0;
 			break;
+    case 'o': /* set address offset */
+      rw_offset = strtol(optarg, &endptr, 0);
+      if (*endptr == '\0')
+        /* ok */;
+      else if (!strcmp(endptr, "k"))
+        rw_offset *= 1024;
+      else if (!strcmp(endptr, "M"))
+        rw_offset *= 1024 * 1024;
+      else {
+        fprintf(stderr, "'%s' is not a valid offset\n", optarg);
+        return EXIT_FAILURE;
+      }
+      break;
 		default:
 			/* error message has already been printed */
 			fprintf(stderr, "Try `%s -h' for more information.\n", argv[0]);
@@ -184,19 +202,23 @@ struct termios config;
 	strcpy(ProgName, argv[0]);
 	if(!GetVersion()) resetFPGA();						// reset the FPGA
 	else return EXIT_FAILURE;
-	int erasePages = (length >> 16) + 1;
-	for (int page = 0; page < erasePages; page++)			// erase sufficient 64k sectors
-	{
-	 	SerBuf[0] = ERASE_64k;
-	 	SerBuf[1] = page;
-		write(fd, SerBuf, 2);
-	 	fprintf(stderr,"Erasing sector %02X0000\n", page);
-	 	read(fd, SerBuf, 1);
-	}
-	int addr = 0;
+
+  int endPage = ((rw_offset + length) >> 16) + 1;
+  for (int page = (rw_offset >> 16); page < endPage; page++)			// erase sufficient 64k sectors
+  {
+    SerBuf[0] = ERASE_64k;
+    SerBuf[1] = page;
+    write(fd, SerBuf, 2);
+    fprintf(stderr,"Erasing sector %02X0000\n", page);
+    read(fd, SerBuf, 1);
+  }
+  fprintf(stderr, "file size: %d\n", (int)length);
+
+	int addr = rw_offset;
 	fprintf(stderr,"Programming ");						// program the FPGA
 	int cnt = 0;
-	while (addr < length)
+  int endAddr = addr + length; // no flashsize check
+	while (addr < endAddr)
 	{
 		SerBuf[0] = PROG_PAGE;
 		SerBuf[1] = (addr>>16);
@@ -218,10 +240,10 @@ struct termios config;
 	}
 
 	if(verify) {
-		addr = 0;
+		addr = rw_offset;
 		fprintf(stderr,"\nVerifying ");
 		cnt = 0;
-		while (addr < length)
+		while (addr < endAddr)
 		{
 			SerBuf[0] = VERIFY_PAGE;
 			SerBuf[1] = (addr >> 16);
