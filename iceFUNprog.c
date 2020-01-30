@@ -39,7 +39,7 @@ enum cmds
 #define FLASHSIZE 1048576	// 1MByte because that is the size of the Flash chip
 unsigned char FPGAbuf[FLASHSIZE];
 unsigned char SerBuf[300];
-unsigned char ProgName[30];
+char ProgName[30];
 int fd;
 char verify;
 int rw_offset = 0;
@@ -55,7 +55,8 @@ static void help(const char *progname)
 	fprintf(stderr, "  -h                    display this help and exit\n");
 	fprintf(stderr, "  -o <offset in bytes>  start address for write [default: 0]\n");
 	fprintf(stderr, "                        (append 'k' to the argument for size in kilobytes,\n");
-	fprintf(stderr, "                        or 'M' for size in megabytes)\n");
+	fprintf(stderr, "                         or 'M' for size in megabytes)\n");
+	fprintf(stderr, "                         or prefix '0x' to the argument for size in hexdecimal\n");
 	fprintf(stderr, "  --help\n");
 	fprintf(stderr, "  -v                    skip verification\n");
 	fprintf(stderr, "Example:\n");
