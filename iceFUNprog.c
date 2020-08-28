@@ -198,7 +198,7 @@ struct termios config;
 		close(fd);
 		return EXIT_FAILURE;
 	}
-	length = fread(FPGAbuf, 1, FLASHSIZE, fp);
+	length = fread(&FPGAbuf[rw_offset], 1, FLASHSIZE, fp);
 
 	strcpy(ProgName, argv[0]);
 	if(!GetVersion()) resetFPGA();						// reset the FPGA
