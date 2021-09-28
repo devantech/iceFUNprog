@@ -130,6 +130,7 @@ struct termios config;
 
 	fd = open(portName, O_RDWR | O_NOCTTY);
 	if(fd == -1) {
+		help(argv[0]);
 		fprintf(stderr, "%s: failed to open serial port.\n", argv[0]);
 		return EXIT_FAILURE;
 	}
