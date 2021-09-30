@@ -128,16 +128,6 @@ struct termios config;
 	}
 	closedir(d);
 
-	fd = open(portName, O_RDWR | O_NOCTTY);
-	if(fd == -1) {
-		help(argv[0]);
-		fprintf(stderr, "%s: failed to open serial port.\n", argv[0]);
-		return EXIT_FAILURE;
-	}
-	tcgetattr(fd, &config);
-	cfmakeraw(&config);								// set options for raw data
-	tcsetattr(fd, TCSANOW, &config);
-
 /* Decode command line parameters */
 	static struct option long_options[] = {
 		{"help", no_argument, NULL, -2},
@@ -179,6 +169,16 @@ struct termios config;
 			return EXIT_FAILURE;
 		}
 	}
+
+	fd = open(portName, O_RDWR | O_NOCTTY);
+	if(fd == -1) {
+		fprintf(stderr, "%s: failed to open serial port.\n", argv[0]);
+		return EXIT_FAILURE;
+	}
+	tcgetattr(fd, &config);
+	cfmakeraw(&config);								// set options for raw data
+	tcsetattr(fd, TCSANOW, &config);
+
 	if (optind + 1 == argc) {
 		filename = argv[optind];
 	} else if (optind != argc) {
