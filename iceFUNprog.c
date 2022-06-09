@@ -125,8 +125,8 @@ struct termios config;
 				break;
 			}
 		}
-	}
-	closedir(d);
+		closedir(d);
+	}	
 
 /* Decode command line parameters */
 	static struct option long_options[] = {
