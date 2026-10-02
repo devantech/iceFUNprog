@@ -39,7 +39,7 @@ enum cmds
 #define FLASHSIZE 1048576	// 1MByte because that is the size of the Flash chip
 unsigned char FPGAbuf[FLASHSIZE];
 unsigned char SerBuf[300];
-char ProgName[30];
+char* ProgName;
 int fd;
 char verify;
 int rw_offset = 0;
@@ -201,7 +201,7 @@ struct termios config;
 	}
 	length = fread(&FPGAbuf[rw_offset], 1, FLASHSIZE, fp);
 
-	strcpy(ProgName, argv[0]);
+	ProgName = argv[0];
 	if(!GetVersion()) resetFPGA();						// reset the FPGA
 	else return EXIT_FAILURE;
 
